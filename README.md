@@ -71,8 +71,10 @@ Liquid log - отображение производительности как�
 * Перейти в рабочую директорию приложения
 * Собрать приложение командой `mvn clean install`
 * В результате должна быть запись `BUILD SUCCESS`, а также должен получиться WAR-файл: `Building war: ${some_directory}/liquid_log/target/liquid_log-0.0.1-SNAPSHOT.war`
-* `java -DParser -Dparse.mode=sdng -Dinflux.host="http://127.0.0.1:8086" -Dinflux.user="root" -Dinflux.password="root" -jar target/liquid_log-0.0.1-SNAPSHOT.war "/home/user/sdng.log.2017-09-07"`
+* `java -DParser -Dparse.mode=sdng -Dinflux.host="http://127.0.0.1:8086" -Dinflux.user="root" -Dinflux.password="root" -jar target/liquid_log-0.0.1-SNAPSHOT.war "/home/user/sdng.log.2017-09-07" sdng`
 * Обратите внимание, что выполнение происходит из корня проекта - это нужно для того, чтобы приложение нашло папку config
+
+Описание аргументов см. в разделе запуска в IDEA.
 
 ## Запуск web-приложения
 
