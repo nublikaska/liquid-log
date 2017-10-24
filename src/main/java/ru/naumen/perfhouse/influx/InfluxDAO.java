@@ -10,6 +10,7 @@ import static ru.naumen.perfhouse.statdata.Constants.PerformedActions.GET_DT_OBJ
 import static ru.naumen.perfhouse.statdata.Constants.PerformedActions.GET_FORM_ACTIONS;
 import static ru.naumen.perfhouse.statdata.Constants.PerformedActions.LIST_ACTIONS;
 import static ru.naumen.perfhouse.statdata.Constants.PerformedActions.SEARCH_ACTIONS;
+import static ru.naumen.perfhouse.statdata.Constants.PerformedActions.GET_CATALOGS_ACTION;
 import static ru.naumen.perfhouse.statdata.Constants.ResponseTimes.COUNT;
 import static ru.naumen.perfhouse.statdata.Constants.ResponseTimes.ERRORS;
 import static ru.naumen.perfhouse.statdata.Constants.ResponseTimes.MAX;
@@ -66,7 +67,7 @@ public class InfluxDAO
 
     @Autowired
     public InfluxDAO(@Value("${influx.host}") String influxHost, @Value("${influx.user}") String user,
-            @Value("${influx.password}") String password)
+                     @Value("${influx.password}") String password)
     {
         this.influxHost = influxHost;
         this.user = user;
@@ -114,7 +115,7 @@ public class InfluxDAO
     }
 
     public void storeActionsFromLog(BatchPoints batch, String dbName, long date, ActionDoneParser dones,
-            ErrorParser errors)
+                                    ErrorParser errors)
     {
         //@formatter:off
         Builder builder = Point.measurement(Constants.MEASUREMENT_NAME).time(date, TimeUnit.MILLISECONDS)
@@ -134,7 +135,8 @@ public class InfluxDAO
                 .addField(COMMENT_ACTIONS, dones.getCommentActions())
                 .addField(GET_FORM_ACTIONS, dones.getFormActions())
                 .addField(GET_DT_OBJECT_ACTIONS, dones.getDtObjectActions())
-                .addField(SEARCH_ACTIONS, dones.getSearchActions());
+                .addField(SEARCH_ACTIONS, dones.getSearchActions())
+                .addField(GET_CATALOGS_ACTION, dones.getCatalogsAction());
 
 
         //@formatter:on
