@@ -43,6 +43,8 @@ public class ActionDoneParser
 
     private int searchActions = 0;
 
+    private int catalogsActions = 0;
+
     boolean nan = true;
 
     private HashMap<String, Integer> actions = new HashMap<>();
@@ -150,6 +152,11 @@ public class ActionDoneParser
         return searchActions;
     }
 
+    public int getCatalogsAction()
+    {
+        return catalogsActions;
+    }
+
     public double getStddev()
     {
         return stddev;
@@ -181,6 +188,10 @@ public class ActionDoneParser
             if (actionInLowerCase.equals("addobjectaction"))
             {
                 addObjectActions++;
+            }
+            else if (actionInLowerCase.equals("getcatalogsaction"))
+            {
+                catalogsActions++;
             }
             else if (actionInLowerCase.equals("editobjectaction"))
             {
