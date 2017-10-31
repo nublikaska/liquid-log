@@ -1,6 +1,7 @@
 package ru.naumen.perfhouse.controllers;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 
@@ -15,12 +16,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 import ru.naumen.perfhouse.influx.InfluxDAO;
+import ru.naumen.sd40.log.parser.App;
+import ru.naumen.sd40.log.parser.Dparser;
 
 /**
  * Created by dkirpichenkov on 26.10.16.
@@ -91,5 +96,17 @@ public class ClientsController
             LOG.error(ex.toString(), ex);
             throw ex;
         }
+    }
+
+    @RequestMapping(value="/Parser", method=RequestMethod.POST)
+    public String greetingSubmit(@ModelAttribute Dparser parser, Model model) throws IOException, ParseException {
+        System.setProperty("DParser", "");
+        System.setProperty("Dparse.mode", parser.getParseMode());
+        System.setProperty("Dinflux.host", parser.getNameInfluxDB());
+        String[] args = new String[2];
+        args[0] = parser.getPath();
+        args[1] = parser.getParseMode();
+        App.main(args);
+        return "clients";
     }
 }
