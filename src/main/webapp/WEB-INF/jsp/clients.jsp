@@ -49,10 +49,51 @@
     <br>
     <div>
     <h1>Options</h1>
-        <form action="/Parser" method="post">
-            <input type="text" name="NameInfluxDB"/>
-            <input type="text" name="ParseMode"/>
-            <input type="text" name="Path"/>
+        <form action="/Parser" method="post" enctype="multipart/form-data">
+            <br><br>*Имя БД: <input type="text" name="NameInfluxDB"/>
+            <br><br>*Режим Парсинга:
+            <select name="ParseMode">
+                <option value="sdng" selected>sdng</option>
+                <option value="gc">gc</option>
+                <option value="top">top</option>
+            </select>
+            <br><br>*Лог файл: <input type="file" name="file"/>
+            <br><br>*Часовой пояс:
+            <select name="timeZone">
+                <option value="GMT-12">GMT-12</option>
+                <option value="GMT-11">GMT-11</option>
+                <option value="GMT-10">GMT-10</option>
+                <option value="GMT-9:30">GMT-9:30</option>
+                <option value="GMT-9">GMT-9</option>
+                <option value="GMT-8:30">GMT-8:30</option>
+                <option value="GMT-8">GMT-8</option>
+                <option value="GMT-7">GMT-7</option>
+                <option value="GMT-6">GMT-6</option>
+                <option value="GMT-5">GMT-5</option>
+                <option value="GMT-4">GMT-4</option>
+                <option value="GMT-3:30">GMT-3:30</option>
+                <option value="GMT-3">GMT-3</option>
+                <option value="GMT-2">GMT-2</option>
+                <option value="GMT-1">GMT-1</option>
+                <option value="GMT+0">GMT+0</option>
+                <option value="GMT+2">GMT+2</option>
+                <option value="GMT+3" selected>GMT+3</option>
+                <option value="GMT+3:30">GMT+3:30</option>
+                <option value="GMT+4">GM+4</option>
+                <option value="GMT+4:30">GMT+4:30</option>
+                <option value="GMT+5">GM+5</option>
+                <option value="GMT+5:30">GMT+5:30</option>
+                <option value="GMT+6">GMT+6</option>
+                <option value="GMT+6:30">GMT+6:30</option>
+                <option value="GMT+7">GMT+7</option>
+                <option value="GMT+8">GMT+8</option>
+                <option value="GMT+9">GMT+9</option>
+                <option value="GMT+10">GMT+10</option>
+                <option value="GMT+11">GMT+11</option>
+                <option value="GMT+12">GMT+12</option>
+                <option value="GMT+13">GMT+13</option>
+            </select>
+            <br><br>Нужно ли выводить в лог результат парсинга (trace result) <input type="checkbox" name="combo"/><br><br>
             <p><input type="submit" value="Submit" /> <input type="reset" value="Reset" /></p>
         </form>
     </div>
