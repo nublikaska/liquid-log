@@ -1,6 +1,7 @@
 package ru.naumen.perfhouse.controllers;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sound.midi.SysexMessage;
 
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
@@ -17,10 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import ru.naumen.perfhouse.influx.InfluxDAO;
@@ -98,15 +97,16 @@ public class ClientsController
         }
     }
 
-    @RequestMapping(value="/Parser", method=RequestMethod.POST)
-    public String greetingSubmit(@ModelAttribute Dparser parser, Model model) throws IOException, ParseException {
-        System.setProperty("DParser", "");
-        System.setProperty("Dparse.mode", parser.getParseMode());
-        System.setProperty("Dinflux.host", parser.getNameInfluxDB());
+    @RequestMapping(path = "/Parser", method=RequestMethod.POST)
+    public ModelAndView ParserSubmit(@RequestParam("NameInfluxDB") String NameInfluxDB,
+                                     @RequestParam("ParseMode") String ParseMode,
+                                     @RequestParam("Path") String Path) throws IOException, ParseException {
+        System.setProperty("Parser", "");
+        System.setProperty("parse.mode", ParseMode);
         String[] args = new String[2];
-        args[0] = parser.getPath();
-        args[1] = parser.getParseMode();
+        args[0] = Path;
+        args[1] = ParseMode;
         App.main(args);
-        return "clients";
+        return index();
     }
 }

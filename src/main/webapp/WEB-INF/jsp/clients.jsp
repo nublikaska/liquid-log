@@ -47,13 +47,15 @@
         <h3><strong>Attention!</strong><br>All requests for stored data are made with UTC time.<br>Requested data will be displayed in your browsers timezone.</h3>
     </div>
     <br>
-    <h1>Form</h1>
-    <form action="#" th:th:action="@{/Parser}" th:object="${parser}" method="post">
-        <p>NameInfluxDB: <input type="text" th:field="*{NameInfluxDB}" /></p>
-        <p>ParseMode: <input type="text" th:field="*{ParseMode}" /></p>
-        <p>Path: <input type="text" th:field="*{Path}" /></p>
-        <p><input type="submit" value="Submit" /> <input type="reset" value="Reset" /></p>
-    </form>
+    <div>
+    <h1>Options</h1>
+        <form action="/Parser" method="post">
+            <input type="text" name="NameInfluxDB"/>
+            <input type="text" name="ParseMode"/>
+            <input type="text" name="Path"/>
+            <p><input type="submit" value="Submit" /> <input type="reset" value="Reset" /></p>
+        </form>
+    </div>
     <br>
 
     <h1>Client list</h1>
