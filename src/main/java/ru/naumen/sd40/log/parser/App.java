@@ -3,11 +3,13 @@ package ru.naumen.sd40.log.parser;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.util.HashMap;
 
 import org.influxdb.dto.BatchPoints;
 
+import org.springframework.web.multipart.MultipartFile;
 import ru.naumen.perfhouse.influx.InfluxDAO;
 import ru.naumen.sd40.log.parser.GCParser.GCTimeParser;
 
@@ -18,19 +20,18 @@ public class App
 {
     /**
      * 
-     * @param args [0] - sdng.log, [1] - gc.log, [2] - top, [3] - dbName, [4] timezone
+     * @param NameInfluxDB - database name
+     * @param file - log
+     * @param ParseMode - mod
+     * @param timeZone - timeZone
+     * @param ResultLog
      * @throws IOException
      * @throws ParseException
      */
-    public static void main(String[] args) throws IOException, ParseException
+    public static void main(String NameInfluxDB, MultipartFile file, String ParseMode, String timeZone, boolean ResultLog) throws IOException, ParseException
     {
-        String influxDb = null;
-
-        if (args.length > 1)
-        {
-            influxDb = args[1];
-            influxDb = influxDb.replaceAll("-", "_");
-        }
+        String influxDb = NameInfluxDB;
+        influxDb = influxDb.replaceAll("-", "_");
 
         InfluxDAO storage = null;
         if (influxDb != null)
@@ -49,24 +50,16 @@ public class App
             points = storage.startBatchPoints(influxDb);
         }
 
-        String log = args[0];
-
         HashMap<Long, DataSet> data = new HashMap<>();
 
-        TimeParser timeParser = new TimeParser();
-        GCTimeParser gcTime = new GCTimeParser();
-        if (args.length > 2)
-        {
-            timeParser = new TimeParser(args[2]);
-            gcTime = new GCTimeParser(args[2]);
-        }
+        TimeParser timeParser = new TimeParser(timeZone);
+        GCTimeParser gcTime = new GCTimeParser(timeZone);
 
-        String mode = System.getProperty("parse.mode", "");
-        switch (mode)
+        switch (ParseMode)
         {
         case "sdng":
             //Parse sdng
-            try (BufferedReader br = new BufferedReader(new FileReader(log), 32 * 1024 * 1024))
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()), 32 * 1024 * 1024))
             {
                 String line;
                 while ((line = br.readLine()) != null)
@@ -88,7 +81,7 @@ public class App
             break;
         case "gc":
             //Parse gc log
-            try (BufferedReader br = new BufferedReader(new FileReader(log)))
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream())))
             {
                 String line;
                 while ((line = br.readLine()) != null)
@@ -108,20 +101,17 @@ public class App
             }
             break;
         case "top":
-            TopParser topParser = new TopParser(log, data);
-            if (args.length > 2)
-            {
-                topParser.configureTimeZone(args[2]);
-            }
+            TopParser topParser = new TopParser(file, data);
+            topParser.configureTimeZone(timeZone);
             //Parse top
             topParser.parse();
             break;
         default:
             throw new IllegalArgumentException(
-                    "Unknown parse mode! Availiable modes: sdng, gc, top. Requested mode: " + mode);
+                    "Unknown parse mode! Availiable modes: sdng, gc, top. Requested mode: " + ParseMode);
         }
 
-        if (System.getProperty("NoCsv") == null)
+        if (ResultLog)
         {
             System.out.print("Timestamp;Actions;Min;Mean;Stddev;50%%;95%%;99%%;99.9%%;Max;Errors\n");
         }
@@ -131,7 +121,7 @@ public class App
             ActionDoneParser dones = set.getActionsDone();
             dones.calculate();
             ErrorParser erros = set.getErrors();
-            if (System.getProperty("NoCsv") == null)
+            if (ResultLog)
             {
                 System.out.print(String.format("%d;%d;%f;%f;%f;%f;%f;%f;%f;%f;%d\n", k, dones.getCount(),
                         dones.getMin(), dones.getMean(), dones.getStddev(), dones.getPercent50(), dones.getPercent95(),
