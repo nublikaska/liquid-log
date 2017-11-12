@@ -1,9 +1,6 @@
 package ru.naumen.perfhouse.controllers;
 
-import java.awt.*;
-import java.io.File;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
@@ -11,9 +8,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.sound.midi.SysexMessage;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.json.JSONObject;
@@ -21,14 +16,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
 import ru.naumen.perfhouse.influx.InfluxDAO;
 import ru.naumen.sd40.log.parser.App;
-import ru.naumen.sd40.log.parser.Dparser;
 
 /**
  * Created by dkirpichenkov on 26.10.16.
@@ -106,24 +99,9 @@ public class ClientsController
                                      @RequestParam("file") MultipartFile file,
                                      @RequestParam("ParseMode") String ParseMode,
                                      @RequestParam("timeZone") String timeZone,
-                                     @RequestParam(value = "combo", required = false) boolean Combo) throws IOException, ParseException{
-        System.setProperty("Parser", "");
-        System.setProperty("parse.mode", ParseMode);
+                                     @RequestParam(value = "resultLog", required = false) boolean ResultLog) throws IOException, ParseException{
 
-        byte[] bytes = file.getBytes();
-        FileUtils.writeByteArrayToFile(new File("log.txt"), bytes);
-
-        String[] args = new String[3];
-        String Path = "log.txt";
-        args[0] = Path;
-        args[1] = NameInfluxDB;
-        args[2] = timeZone;
-        if (Combo == false)//багует
-        {
-            System.setProperty("NoCsv", "yes");
-        }
-
-        App.main(args);
+        App.main(NameInfluxDB, file, ParseMode, timeZone, ResultLog);
         return index();
     }
 }

@@ -93,7 +93,7 @@
                 <option value="GMT+12">GMT+12</option>
                 <option value="GMT+13">GMT+13</option>
             </select>
-            <br><br>Нужно ли выводить в лог результат парсинга (trace result) <input type="checkbox" name="combo"/><br><br>
+            <br><br>Нужно ли выводить в лог результат парсинга (trace result) <input type="checkbox" name="resultLog"/><br><br>
             <p><input type="submit" value="Submit" /> <input type="reset" value="Reset" /></p>
         </form>
     </div>
