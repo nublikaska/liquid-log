@@ -12,6 +12,9 @@ import org.influxdb.dto.BatchPoints;
 import org.springframework.web.multipart.MultipartFile;
 import ru.naumen.perfhouse.influx.InfluxDAO;
 import ru.naumen.sd40.log.parser.GCParser.GCTimeParser;
+import ru.naumen.sd40.log.parser.Implements_Interfaces.Parser;
+import ru.naumen.sd40.log.parser.Implements_Interfaces.SdngParser;
+import ru.naumen.sd40.log.parser.Implements_Interfaces.TopParser;
 
 /**
  * Created by doki on 22.10.16.
@@ -50,99 +53,101 @@ public class App
             points = storage.startBatchPoints(influxDb);
         }
 
-        HashMap<Long, DataSet> data = new HashMap<>();
+        HashMap<Long, Parser> data = new HashMap<>();
 
-        TimeParser timeParser = new TimeParser(timeZone);
-        GCTimeParser gcTime = new GCTimeParser(timeZone);
+        Parser parser;
+        int sz;
 
         switch (ParseMode)
         {
         case "sdng":
             //Parse sdng
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()), 32 * 1024 * 1024))
-            {
-                String line;
-                while ((line = br.readLine()) != null)
-                {
-                    long time = timeParser.parseLine(line);
-
-                    if (time == 0)
-                    {
-                        continue;
-                    }
-
-                    int min5 = 5 * 60 * 1000;
-                    long count = time / min5;
-                    long key = count * min5;
-
-                    data.computeIfAbsent(key, k -> new DataSet()).parseLine(line);
-                }
-            }
+            sz = 32 * 1024 * 1024;
+            parser = new SdngParser(timeZone);
+//            try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()), 32 * 1024 * 1024)) {
+//                parser = new SdngParser(timeZone);
+//                String line;
+//                while ((line = br.readLine()) != null) {
+//                    long time = parser.parsTime(line);
+//
+//                    if (time == 0) {
+//                        continue;
+//                    }
+//
+//                    int min5 = 5 * 60 * 1000;
+//                    long count = time / min5;
+//                    long key = count * min5;
+//
+//                    Parser parser2 = new SdngParser(timeZone);
+//                    data.computeIfAbsent(key, k -> parser2).parseLine(line);
+//                }
+//            }
             break;
         case "gc":
             //Parse gc log
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream())))
-            {
-                String line;
-                while ((line = br.readLine()) != null)
-                {
-                    long time = gcTime.parseTime(line);
-
-                    if (time == 0)
-                    {
-                        continue;
-                    }
-
-                    int min5 = 5 * 60 * 1000;
-                    long count = time / min5;
-                    long key = count * min5;
-                    data.computeIfAbsent(key, k -> new DataSet()).parseGcLine(line);
-                }
-            }
+            sz = 32 * 1024 * 1024;
+            parser = new ru.naumen.sd40.log.parser.Implements_Interfaces.GCParser(timeZone);
             break;
-        case "top":
-            TopParser topParser = new TopParser(file, data);
-            topParser.configureTimeZone(timeZone);
-            //Parse top
-            topParser.parse();
-            break;
+//        case "top":
+//            TopParser topParser = new TopParser(file, data);
+//            topParser.configureTimeZone(timeZone);
+//            //Parse top
+//            topParser.parse();
+//            break;
         default:
             throw new IllegalArgumentException(
                     "Unknown parse mode! Availiable modes: sdng, gc, top. Requested mode: " + ParseMode);
+        }
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()), sz)) {
+            parser.Parsing(br, data);
         }
 
         if (ResultLog)
         {
             System.out.print("Timestamp;Actions;Min;Mean;Stddev;50%%;95%%;99%%;99.9%%;Max;Errors\n");
         }
+
         BatchPoints finalPoints = points;
         data.forEach((k, set) ->
         {
-            ActionDoneParser dones = set.getActionsDone();
-            dones.calculate();
-            ErrorParser erros = set.getErrors();
-            if (ResultLog)
-            {
-                System.out.print(String.format("%d;%d;%f;%f;%f;%f;%f;%f;%f;%f;%d\n", k, dones.getCount(),
-                        dones.getMin(), dones.getMean(), dones.getStddev(), dones.getPercent50(), dones.getPercent95(),
-                        dones.getPercent99(), dones.getPercent999(), dones.getMax(), erros.getErrorCount()));
-            }
-            if (!dones.isNan())
-            {
-                finalStorage.storeActionsFromLog(finalPoints, finalInfluxDb, k, dones, erros);
+            if(set instanceof SdngParser) {
+                SdngParser dones = ((SdngParser)set).getDataParser();
+                dones.calculate();
+                ErrorParser erros = ((SdngParser)set).getErrors();
+                if (ResultLog)
+                {
+                    System.out.print(String.format("%d;%d;%f;%f;%f;%f;%f;%f;%f;%f;%d\n", k,
+                            dones.getCount(),
+                            dones.getMin(),
+                            dones.getMean(),
+                            dones.getStddev(),
+                            dones.getPercent50(),
+                            dones.getPercent95(),
+                            dones.getPercent99(),
+                            dones.getPercent999(),
+                            dones.getMax(),
+                            erros.getErrorCount()));
+                }
+                if (!dones.isNan())
+                {
+                    finalStorage.storeActionsFromLog(finalPoints, finalInfluxDb, k, dones, erros);
+                }
             }
 
-            GCParser gc = set.getGc();
-            if (!gc.isNan())
-            {
-                finalStorage.storeGc(finalPoints, finalInfluxDb, k, gc);
+            if(set instanceof ru.naumen.sd40.log.parser.Implements_Interfaces.GCParser) {
+                ru.naumen.sd40.log.parser.Implements_Interfaces.GCParser gc = ((ru.naumen.sd40.log.parser.Implements_Interfaces.GCParser)set).getDataParser();
+                if (!gc.isNan()) {
+                    finalStorage.storeGc(finalPoints, finalInfluxDb, k, gc);
+                }
             }
 
-            TopData cpuData = set.cpuData();
-            if (!cpuData.isNan())
-            {
-                finalStorage.storeTop(finalPoints, finalInfluxDb, k, cpuData);
-            }
+//            if(set instanceof TopParser) {
+//                TopParser cpuData = ((TopParser)set).getDataParser();
+//                if (!cpuData.isNan()) {
+//                    finalStorage.storeTop(finalPoints, finalInfluxDb, k, cpuData);
+//                }
+//            }
         });
         storage.writeBatch(points);
     }
