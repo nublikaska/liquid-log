@@ -1,14 +1,11 @@
 package ru.naumen.sd40.log.parser.Implements_Interfaces;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import ru.naumen.sd40.log.parser.ActionDoneParser;
-import ru.naumen.sd40.log.parser.ErrorParser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SdngParser extends Parser{
@@ -63,7 +60,6 @@ public class SdngParser extends Parser{
     public void parseLine(String line)
     {
         errors.parseLine(line);
-        System.out.println("SDNG_PARSER");
         matcher = regex.matcher(line);
 
         if (matcher.find())
@@ -247,5 +243,47 @@ public class SdngParser extends Parser{
     public ArrayList<Integer> getTimes()
     {
         return times;
+    }
+
+    public class ErrorParser
+    {
+        long warnCount;
+        long errorCount;
+        long fatalCount;
+
+        Pattern warnRegEx = Pattern.compile("^\\d+ \\[.+?\\] \\(.+?\\) WARN");
+        Pattern errorRegEx = Pattern.compile("^\\d+ \\[.+?\\] \\(.+?\\) ERROR");
+        Pattern fatalRegEx = Pattern.compile("^\\d+ \\[.+?\\] \\(.+?\\) FATAL");
+
+        public void parseLine(String line)
+        {
+            if (warnRegEx.matcher(line).find())
+            {
+                warnCount++;
+            }
+            if (errorRegEx.matcher(line).find())
+            {
+                errorCount++;
+            }
+            if (fatalRegEx.matcher(line).find())
+            {
+                fatalCount++;
+            }
+        }
+
+        public long getWarnCount()
+        {
+            return warnCount;
+        }
+
+        public long getErrorCount()
+        {
+            return errorCount;
+        }
+
+        public long getFatalCount()
+        {
+            return fatalCount;
+        }
     }
 }

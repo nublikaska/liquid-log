@@ -46,13 +46,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import ru.naumen.perfhouse.statdata.Constants;
-import ru.naumen.sd40.log.parser.ActionDoneParser;
-import ru.naumen.sd40.log.parser.ErrorParser;
-import ru.naumen.sd40.log.parser.GCParser;
-import ru.naumen.sd40.log.parser.Implements_Interfaces.Parser;
 import ru.naumen.sd40.log.parser.Implements_Interfaces.SdngParser;
 import ru.naumen.sd40.log.parser.Implements_Interfaces.TopParser;
-import ru.naumen.sd40.log.parser.TopData;
 
 /**
  * Created by doki on 24.10.16.
@@ -118,7 +113,7 @@ public class InfluxDAO
     }
 
     public void storeActionsFromLog(BatchPoints batch, String dbName, long date, SdngParser dones,
-                                    ErrorParser errors)
+                                   SdngParser.ErrorParser errors)
     {
         //@formatter:off
         Builder builder = Point.measurement(Constants.MEASUREMENT_NAME).time(date, TimeUnit.MILLISECONDS)
@@ -202,7 +197,7 @@ public class InfluxDAO
         }
     }
 
-    public void storeTop(BatchPoints batch, String dbName, long date, TopParser data)
+    public void storeTop(BatchPoints batch, String dbName, long date, TopParser.TopData data)
     {
         Point point = Point.measurement(Constants.MEASUREMENT_NAME).time(date, TimeUnit.MILLISECONDS)
                 .addField(AVG_LA, data.getAvgLa()).addField(AVG_CPU, data.getAvgCpuUsage())

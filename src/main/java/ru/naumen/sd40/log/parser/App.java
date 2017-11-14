@@ -11,7 +11,6 @@ import org.influxdb.dto.BatchPoints;
 
 import org.springframework.web.multipart.MultipartFile;
 import ru.naumen.perfhouse.influx.InfluxDAO;
-import ru.naumen.sd40.log.parser.GCParser.GCTimeParser;
 import ru.naumen.sd40.log.parser.Implements_Interfaces.Parser;
 import ru.naumen.sd40.log.parser.Implements_Interfaces.SdngParser;
 import ru.naumen.sd40.log.parser.Implements_Interfaces.TopParser;
@@ -88,12 +87,10 @@ public class App
             sz = 32 * 1024 * 1024;
             parser = new ru.naumen.sd40.log.parser.Implements_Interfaces.GCParser(timeZone);
             break;
-//        case "top":
-//            TopParser topParser = new TopParser(file, data);
-//            topParser.configureTimeZone(timeZone);
-//            //Parse top
-//            topParser.parse();
-//            break;
+        case "top":
+            parser = new TopParser(timeZone, file, data);
+            sz = 32 * 1024 * 1024;
+            break;
         default:
             throw new IllegalArgumentException(
                     "Unknown parse mode! Availiable modes: sdng, gc, top. Requested mode: " + ParseMode);
@@ -114,7 +111,7 @@ public class App
             if(set instanceof SdngParser) {
                 SdngParser dones = ((SdngParser)set).getDataParser();
                 dones.calculate();
-                ErrorParser erros = ((SdngParser)set).getErrors();
+                SdngParser.ErrorParser erros = ((SdngParser)set).getErrors();
                 if (ResultLog)
                 {
                     System.out.print(String.format("%d;%d;%f;%f;%f;%f;%f;%f;%f;%f;%d\n", k,
@@ -142,12 +139,12 @@ public class App
                 }
             }
 
-//            if(set instanceof TopParser) {
-//                TopParser cpuData = ((TopParser)set).getDataParser();
-//                if (!cpuData.isNan()) {
-//                    finalStorage.storeTop(finalPoints, finalInfluxDb, k, cpuData);
-//                }
-//            }
+            if(set instanceof TopParser) {
+                TopParser.TopData cpuData = ((TopParser)set).cpuData();
+                if (!cpuData.isNan()) {
+                    finalStorage.storeTop(finalPoints, finalInfluxDb, k, cpuData);
+                }
+            }
         });
         storage.writeBatch(points);
     }

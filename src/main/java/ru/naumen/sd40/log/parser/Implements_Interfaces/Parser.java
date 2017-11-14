@@ -1,6 +1,5 @@
 package ru.naumen.sd40.log.parser.Implements_Interfaces;
 
-import ru.naumen.sd40.log.parser.ErrorParser;
 import ru.naumen.sd40.log.parser.Interfaces.DataParser;
 import ru.naumen.sd40.log.parser.Interfaces.TimeParser;
 
@@ -31,7 +30,7 @@ public abstract class Parser implements DataParser, TimeParser {
     }
 
     @Override
-    public abstract void parseLine(String line) throws ParseException;
+    public abstract void parseLine(String line) throws ParseException, IOException;
 
     @Override
     public long parsTime(String line) throws ParseException {
