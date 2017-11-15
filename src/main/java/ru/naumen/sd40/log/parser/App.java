@@ -1,7 +1,6 @@
 package ru.naumen.sd40.log.parser;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.ParseException;
@@ -11,9 +10,13 @@ import org.influxdb.dto.BatchPoints;
 
 import org.springframework.web.multipart.MultipartFile;
 import ru.naumen.perfhouse.influx.InfluxDAO;
-import ru.naumen.sd40.log.parser.Implements_Interfaces.Parser;
-import ru.naumen.sd40.log.parser.Implements_Interfaces.SdngParser;
-import ru.naumen.sd40.log.parser.Implements_Interfaces.TopParser;
+import ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER.SdngParser;
+import ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER.TopParser;
+import ru.naumen.sd40.log.parser.IMPLEMENTS_TIME_PARSER.GcTimeParser;
+import ru.naumen.sd40.log.parser.IMPLEMENTS_TIME_PARSER.SdngTimeParser;
+import ru.naumen.sd40.log.parser.Interfaces.DataParser;
+import ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER.GCParser;
+import ru.naumen.sd40.log.parser.Interfaces.TimeParser;
 
 /**
  * Created by doki on 22.10.16.
@@ -52,52 +55,35 @@ public class App
             points = storage.startBatchPoints(influxDb);
         }
 
-        HashMap<Long, Parser> data = new HashMap<>();
+        HashMap<Long, DataParser> data = new HashMap<>();
 
-        Parser parser;
-        int sz;
+        DataParser dataParser;
+        TimeParser timeParser;
+        int sz = 32 * 1024 * 1024;;
 
         switch (ParseMode)
         {
         case "sdng":
             //Parse sdng
-            sz = 32 * 1024 * 1024;
-            parser = new SdngParser(timeZone);
-//            try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()), 32 * 1024 * 1024)) {
-//                parser = new SdngParser(timeZone);
-//                String line;
-//                while ((line = br.readLine()) != null) {
-//                    long time = parser.parsTime(line);
-//
-//                    if (time == 0) {
-//                        continue;
-//                    }
-//
-//                    int min5 = 5 * 60 * 1000;
-//                    long count = time / min5;
-//                    long key = count * min5;
-//
-//                    Parser parser2 = new SdngParser(timeZone);
-//                    data.computeIfAbsent(key, k -> parser2).parseLine(line);
-//                }
-//            }
+            dataParser = new SdngParser();
+            timeParser = new SdngTimeParser(timeZone);
+
             break;
         case "gc":
             //Parse gc log
-            sz = 32 * 1024 * 1024;
-            parser = new ru.naumen.sd40.log.parser.Implements_Interfaces.GCParser(timeZone);
+            dataParser = new GCParser();
+            timeParser = new GcTimeParser(timeZone);
             break;
-        case "top":
-            parser = new TopParser(timeZone, file, data);
-            sz = 32 * 1024 * 1024;
-            break;
+//        case "top":
+//            parser = new TopParser(timeZone, file, data);
+//            break;
         default:
             throw new IllegalArgumentException(
                     "Unknown parse mode! Availiable modes: sdng, gc, top. Requested mode: " + ParseMode);
         }
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()), sz)) {
-            parser.Parsing(br, data);
+            dataParser.Parsing(br, data, timeParser);
         }
 
         if (ResultLog)
@@ -132,19 +118,19 @@ public class App
                 }
             }
 
-            if(set instanceof ru.naumen.sd40.log.parser.Implements_Interfaces.GCParser) {
-                ru.naumen.sd40.log.parser.Implements_Interfaces.GCParser gc = ((ru.naumen.sd40.log.parser.Implements_Interfaces.GCParser)set).getDataParser();
+            if(set instanceof ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER.GCParser) {
+                ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER.GCParser gc = ((ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER.GCParser)set).getDataParser();
                 if (!gc.isNan()) {
                     finalStorage.storeGc(finalPoints, finalInfluxDb, k, gc);
                 }
             }
 
-            if(set instanceof TopParser) {
-                TopParser.TopData cpuData = ((TopParser)set).cpuData();
-                if (!cpuData.isNan()) {
-                    finalStorage.storeTop(finalPoints, finalInfluxDb, k, cpuData);
-                }
-            }
+//            if(set instanceof TopParser) {
+//                TopParser.TopData cpuData = ((TopParser)set).cpuData();
+//                if (!cpuData.isNan()) {
+//                    finalStorage.storeTop(finalPoints, finalInfluxDb, k, cpuData);
+//                }
+//            }
         });
         storage.writeBatch(points);
     }

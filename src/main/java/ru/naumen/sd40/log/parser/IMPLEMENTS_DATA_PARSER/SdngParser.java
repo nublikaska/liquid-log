@@ -1,16 +1,19 @@
-package ru.naumen.sd40.log.parser.Implements_Interfaces;
+package ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import ru.naumen.sd40.log.parser.Interfaces.DataParser;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class SdngParser extends Parser{
-    private ErrorParser errors;
+public class SdngParser implements DataParser{
 
+    private final Pattern regex = Pattern.compile("Done\\((\\d+)\\): ?(.*?Action)");
+    private Matcher matcher;
+
+    private ErrorParser errors;
     private static Set<String> EXCLUDED_ACTIONS = new HashSet<>();
 
     static
@@ -25,7 +28,6 @@ public class SdngParser extends Parser{
     double percent50;
     double percent95;
     double percent99;
-
     double percent999;
     double max;
     long count;
@@ -33,26 +35,14 @@ public class SdngParser extends Parser{
     private int editObjectsActions = 0;
     private int getListActions = 0;
     private int commentActions = 0;
-
     private int getFormActions = 0;
-
     private int getDtObjectActions = 0;
-
     private int searchActions = 0;
-
     private int catalogsActions = 0;
-
     boolean nan = true;
-
     private HashMap<String, Integer> actions = new HashMap<>();
 
-    public SdngParser(String timeZone) {
-        super(
-                timeZone,
-                "^\\d+ \\[.*?\\] \\((\\d{2} .{3} \\d{4} \\d{2}:\\d{2}:\\d{2},\\d{3})\\)",
-                "Done\\((\\d+)\\): ?(.*?Action)",
-                "dd MMM yyyy HH:mm:ss,SSS"
-        );
+    public SdngParser() {
         errors = new ErrorParser();
     }
 
@@ -138,7 +128,7 @@ public class SdngParser extends Parser{
 
     @Override
     public SdngParser getNewDataParser() {
-        return new SdngParser(timeZone);
+        return new SdngParser();
     }
 
     public ErrorParser getErrors() {

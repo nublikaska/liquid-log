@@ -1,10 +1,9 @@
-package ru.naumen.sd40.log.parser.Implements_Interfaces;
+package ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import ru.naumen.sd40.log.parser.Interfaces.DataParser;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -13,14 +12,12 @@ import java.util.regex.Pattern;
 import static ru.naumen.sd40.log.parser.NumberUtils.getSafeDouble;
 import static ru.naumen.sd40.log.parser.NumberUtils.roundToTwoPlaces;
 
-public class GCParser extends Parser {
+public class GCParser implements DataParser{
 
-    public GCParser(String timeZone) {
-        super(
-                timeZone,
-                "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}\\+\\d{4}).*",
-                ".*real=(.*)secs.*",
-                "yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+    private final Pattern regex = Pattern.compile(".*real=(.*)secs.*");
+    private Matcher matcher;
+
+    public GCParser() {
     }
 
     @Override
@@ -46,7 +43,7 @@ public class GCParser extends Parser {
 
     @Override
     public GCParser getNewDataParser() {
-        return new GCParser(timeZone);
+        return new GCParser();
     }
 
     private DescriptiveStatistics ds = new DescriptiveStatistics();
