@@ -14,6 +14,7 @@ import ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER.SdngParser;
 import ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER.TopParser;
 import ru.naumen.sd40.log.parser.IMPLEMENTS_TIME_PARSER.GcTimeParser;
 import ru.naumen.sd40.log.parser.IMPLEMENTS_TIME_PARSER.SdngTimeParser;
+import ru.naumen.sd40.log.parser.IMPLEMENTS_TIME_PARSER.TopTimeParser;
 import ru.naumen.sd40.log.parser.Interfaces.DataParser;
 import ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER.GCParser;
 import ru.naumen.sd40.log.parser.Interfaces.TimeParser;
@@ -65,25 +66,36 @@ public class App
         {
         case "sdng":
             //Parse sdng
-            dataParser = new SdngParser();
             timeParser = new SdngTimeParser(timeZone);
-
+            dataParser = new SdngParser();
             break;
         case "gc":
             //Parse gc log
-            dataParser = new GCParser();
             timeParser = new GcTimeParser(timeZone);
+            dataParser = new GCParser();
             break;
-//        case "top":
-//            parser = new TopParser(timeZone, file, data);
-//            break;
+        case "top":
+            timeParser = new TopTimeParser(timeZone);
+            dataParser = new TopParser(file, data, timeParser);
+            break;
         default:
             throw new IllegalArgumentException(
                     "Unknown parse mode! Availiable modes: sdng, gc, top. Requested mode: " + ParseMode);
         }
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()), sz)) {
-            dataParser.Parsing(br, data, timeParser);
+            String line;
+            while ((line = br.readLine()) != null) {
+                long time = timeParser.parsTime(line);
+
+                if (dataParser.Condition(time, line)) {
+                    int min5 = 5 * 60 * 1000;
+                    long count = time / min5;
+                    long key = count * min5;
+
+                    data.computeIfAbsent(key, k -> dataParser.getNewDataParser()).parseLine(line);
+                }
+            }
         }
 
         if (ResultLog)
@@ -118,19 +130,19 @@ public class App
                 }
             }
 
-            if(set instanceof ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER.GCParser) {
-                ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER.GCParser gc = ((ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER.GCParser)set).getDataParser();
+            if(set instanceof GCParser) {
+                ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER.GCParser gc = ((GCParser)set).getDataParser();
                 if (!gc.isNan()) {
                     finalStorage.storeGc(finalPoints, finalInfluxDb, k, gc);
                 }
             }
 
-//            if(set instanceof TopParser) {
-//                TopParser.TopData cpuData = ((TopParser)set).cpuData();
-//                if (!cpuData.isNan()) {
-//                    finalStorage.storeTop(finalPoints, finalInfluxDb, k, cpuData);
-//                }
-//            }
+            if(set instanceof TopParser) {
+                TopParser.TopData cpuData = ((TopParser)set).cpuData();
+                if (!cpuData.isNan()) {
+                    finalStorage.storeTop(finalPoints, finalInfluxDb, k, cpuData);
+                }
+            }
         });
         storage.writeBatch(points);
     }

@@ -11,21 +11,10 @@ public interface DataParser {
     DataParser getDataParser();
     boolean isNan();
     DataParser getNewDataParser();
-
-    default void Parsing(BufferedReader br, HashMap<Long, DataParser> data, TimeParser timeParser) throws IOException, ParseException {
-        String line;
-        while ((line = br.readLine()) != null) {
-            long time = timeParser.parsTime(line);
-
-            if (time == 0) {
-                continue;
-            }
-
-            int min5 = 5 * 60 * 1000;
-            long count = time / min5;
-            long key = count * min5;
-
-            data.computeIfAbsent(key, k -> this.getNewDataParser()).parseLine(line);
+    default boolean Condition(long time, String line) throws IOException, ParseException {
+        if (time == 0) {
+            return false;
         }
-    }
+        return true;
+    };
 }

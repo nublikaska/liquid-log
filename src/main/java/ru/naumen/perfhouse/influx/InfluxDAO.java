@@ -197,21 +197,21 @@ public class InfluxDAO
         }
     }
 
-//    public void storeTop(BatchPoints batch, String dbName, long date, TopParser.TopData data)
-//    {
-//        Point point = Point.measurement(Constants.MEASUREMENT_NAME).time(date, TimeUnit.MILLISECONDS)
-//                .addField(AVG_LA, data.getAvgLa()).addField(AVG_CPU, data.getAvgCpuUsage())
-//                .addField(AVG_MEM, data.getAvgMemUsage()).addField(MAX_LA, data.getMaxLa())
-//                .addField(MAX_CPU, data.getMaxCpu()).addField(MAX_MEM, data.getMaxMem()).build();
-//        if (batch != null)
-//        {
-//            batch.getPoints().add(point);
-//        }
-//        else
-//        {
-//            influx.write(dbName, "autogen", point);
-//        }
-//    }
+    public void storeTop(BatchPoints batch, String dbName, long date, TopParser.TopData data)
+    {
+        Point point = Point.measurement(Constants.MEASUREMENT_NAME).time(date, TimeUnit.MILLISECONDS)
+                .addField(AVG_LA, data.getAvgLa()).addField(AVG_CPU, data.getAvgCpuUsage())
+                .addField(AVG_MEM, data.getAvgMemUsage()).addField(MAX_LA, data.getMaxLa())
+                .addField(MAX_CPU, data.getMaxCpu()).addField(MAX_MEM, data.getMaxMem()).build();
+        if (batch != null)
+        {
+            batch.getPoints().add(point);
+        }
+        else
+        {
+            influx.write(dbName, "autogen", point);
+        }
+    }
 
     public void writeBatch(BatchPoints batch)
     {
