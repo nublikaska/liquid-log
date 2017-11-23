@@ -46,10 +46,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import ru.naumen.perfhouse.statdata.Constants;
-import ru.naumen.sd40.log.parser.ActionDoneParser;
-import ru.naumen.sd40.log.parser.ErrorParser;
-import ru.naumen.sd40.log.parser.GCParser;
-import ru.naumen.sd40.log.parser.TopData;
+import ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER.SdngParser;
+import ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER.TopParser;
 
 /**
  * Created by doki on 24.10.16.
@@ -114,8 +112,8 @@ public class InfluxDAO
         return BatchPoints.database(dbName).build();
     }
 
-    public void storeActionsFromLog(BatchPoints batch, String dbName, long date, ActionDoneParser dones,
-                                    ErrorParser errors)
+    public void storeActionsFromLog(BatchPoints batch, String dbName, long date, SdngParser dones,
+                                   SdngParser.ErrorParser errors)
     {
         //@formatter:off
         Builder builder = Point.measurement(Constants.MEASUREMENT_NAME).time(date, TimeUnit.MILLISECONDS)
@@ -183,7 +181,7 @@ public class InfluxDAO
         }
     }
 
-    public void storeGc(BatchPoints batch, String dbName, long date, GCParser gc)
+    public void storeGc(BatchPoints batch, String dbName, long date, ru.naumen.sd40.log.parser.IMPLEMENTS_DATA_PARSER.GCParser gc)
     {
         Point point = Point.measurement(Constants.MEASUREMENT_NAME).time(date, TimeUnit.MILLISECONDS)
                 .addField(GCTIMES, gc.getGcTimes()).addField(AVARAGE_GC_TIME, gc.getCalculatedAvg())
@@ -199,7 +197,7 @@ public class InfluxDAO
         }
     }
 
-    public void storeTop(BatchPoints batch, String dbName, long date, TopData data)
+    public void storeTop(BatchPoints batch, String dbName, long date, TopParser.TopData data)
     {
         Point point = Point.measurement(Constants.MEASUREMENT_NAME).time(date, TimeUnit.MILLISECONDS)
                 .addField(AVG_LA, data.getAvgLa()).addField(AVG_CPU, data.getAvgCpuUsage())
